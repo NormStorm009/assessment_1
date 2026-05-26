@@ -19,4 +19,10 @@ ec2_instance_type = "t3.micro"
 
 # ALB + Container
 
-app_port = 5000
+app_port = 5001
+docker_image = "normstorm009/sample:latest"
+
+# Ansible
+ansible_port    = 3000
+github_repo_url = "https://github.com/NormStorm009/assessment_1.git"
+github_branch   = "add_webserver"

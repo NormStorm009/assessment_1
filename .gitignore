@@ -1,2 +1,4 @@
 /rewards_terraform/.terraform
 rewards_terraform/.terraform.lock.hcl
+rewards_terraform/terraform.tfstate
+rewards_terraform/terraform.tfstate.backup

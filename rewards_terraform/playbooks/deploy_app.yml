@@ -1,0 +1,57 @@
+---
+# Deploy App Playbook
+# Mirrors the logic from init.sh — load this into Semaphore to configure app servers from the dashboard.
+#
+# Semaphore setup:
+#   1. Key Store  → add an SSH key or use the AWS SSM connection plugin
+#   2. Inventory  → add the app server private IP (or use dynamic AWS inventory)
+#   3. Repository → point to this repo
+#   4. Task Template → set this file as the playbook, pass vars below
+#
+# Required vars (set in Semaphore Task Template or extra vars):
+#   app_port:     e.g. 5001
+#   docker_image: e.g. normstorm009/sample:latest
+
+- name: Deploy App Server
+  hosts: app_servers
+  become: true
+
+  tasks:
+    - name: Update all packages
+      ansible.builtin.dnf:
+        name: "*"
+        state: latest
+        update_cache: true
+
+    - name: Install Docker
+      ansible.builtin.dnf:
+        name: docker
+        state: present
+
+    - name: Enable and start Docker service
+      ansible.builtin.systemd:
+        name: docker
+        enabled: true
+        state: started
+
+    - name: Add ec2-user to docker group
+      ansible.builtin.user:
+        name: ec2-user
+        groups: docker
+        append: true
+
+    - name: Pull Docker image
+      community.docker.docker_image:
+        name: "{{ docker_image }}"
+        source: pull
+
+    - name: Run app container
+      community.docker.docker_container:
+        name: rewards
+        image: "{{ docker_image }}"
+        state: started
+        restart_policy: unless-stopped
+        ports:
+          - "{{ app_port }}:{{ app_port }}"
+        env:
+          PORT: "{{ app_port | string }}"
