@@ -4,10 +4,13 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    tls = {
+      source  = "hashicorp/tls"
+      version = "~> 4.0"
+    }
   }
 
-  # No backnd block = local state (terraform.tfstate in your working directory)
-  
+  # State is stored locally — see SOLUTION.md for production recommendations.
 }
 
 data "aws_caller_identity" "current" {}

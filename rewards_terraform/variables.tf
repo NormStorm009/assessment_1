@@ -61,3 +61,37 @@ variable "health_check_path" {
   type        = string
   default     = "/health"
 }
+
+variable "ec2_instance_type" {
+  description = "The Instance type relating to compute strategy"
+}
+
+
+variable "docker_image" {
+  description = "Docker image to run on the app server"
+  type        = string
+  default     = "nginx:alpine"
+}
+
+variable "ansible_instance_type" {
+  description = "Instance type for the Ansible control node — needs more RAM than the app server"
+  type        = string
+  default     = "t3.medium"
+}
+
+variable "ansible_port" {
+  description = "Port the Ansible Semaphore dashboard listens on"
+  type        = number
+  default     = 3000
+}
+
+variable "github_repo_url" {
+  description = "HTTPS URL of the GitHub repo containing the Ansible playbooks"
+  type        = string
+}
+
+variable "github_branch" {
+  description = "Git branch Semaphore will clone for playbooks"
+  type        = string
+  default     = "main"
+}

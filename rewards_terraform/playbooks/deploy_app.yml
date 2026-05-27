@@ -1,0 +1,60 @@
+---
+# Deploy App Playbook
+# Deploys the rewards container to the app server.
+# Pre-configured by Semaphore via the init script — hit Run from the dashboard.
+#
+# Required vars (pre-wired in the Semaphore environment):
+#   app_port:     e.g. 5001
+#   docker_image: e.g. normstorm009/sample:latest
+
+- name: Deploy App Server
+  hosts: app_servers
+  become: true
+
+  tasks:
+    - name: Update all packages
+      ansible.builtin.dnf:
+        name: "*"
+        state: latest
+        update_cache: true
+
+    - name: Install Docker
+      ansible.builtin.dnf:
+        name: docker
+        state: present
+
+    - name: Enable and start Docker service
+      ansible.builtin.systemd:
+        name: docker
+        enabled: true
+        state: started
+
+    - name: Add ec2-user to docker group
+      ansible.builtin.user:
+        name: ec2-user
+        groups: docker
+        append: true
+
+    - name: Pull Docker image
+      ansible.builtin.command:
+        cmd: "docker pull {{ docker_image }}"
+      register: pull_out
+      changed_when: "'Status: Downloaded newer image' in pull_out.stdout"
+
+    - name: Stop existing container (if any)
+      ansible.builtin.shell: docker stop rewards && docker rm rewards
+      args:
+        executable: /bin/bash
+      register: stop_out
+      failed_when: false
+      changed_when: stop_out.rc == 0
+
+    - name: Run app container
+      ansible.builtin.command:
+        cmd: >-
+          docker run -d
+          --name rewards
+          --restart unless-stopped
+          -p {{ app_port }}:{{ app_port }}
+          -e PORT={{ app_port }}
+          {{ docker_image }}
