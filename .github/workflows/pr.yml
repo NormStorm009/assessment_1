@@ -1,0 +1,39 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check required secrets
+        run: |
+          missing=()
+          [ -z "$AWS_KEY" ]    && missing+=("AWS_ACCESS_KEY_ID")
+          [ -z "$AWS_SECRET" ] && missing+=("AWS_SECRET_ACCESS_KEY")
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "Missing secrets: ${missing[*]}"
+            exit 1
+          fi
+        env:
+          AWS_KEY:    ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~1.9"
+
+      - name: Format check
+        run: terraform fmt -check -recursive
+        working-directory: rewards_terraform
+
+      - name: Validate
+        run: |
+          terraform init -backend=false
+          terraform validate
+        working-directory: rewards_terraform
