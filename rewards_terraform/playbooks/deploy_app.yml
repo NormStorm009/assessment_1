@@ -1,14 +1,9 @@
 ---
 # Deploy App Playbook
-# Mirrors the logic from init.sh — load this into Semaphore to configure app servers from the dashboard.
+# Deploys the rewards container to the app server.
+# Pre-configured by Semaphore via the init script — hit Run from the dashboard.
 #
-# Semaphore setup:
-#   1. Key Store  → add an SSH key or use the AWS SSM connection plugin
-#   2. Inventory  → add the app server private IP (or use dynamic AWS inventory)
-#   3. Repository → point to this repo
-#   4. Task Template → set this file as the playbook, pass vars below
-#
-# Required vars (set in Semaphore Task Template or extra vars):
+# Required vars (pre-wired in the Semaphore environment):
 #   app_port:     e.g. 5001
 #   docker_image: e.g. normstorm009/sample:latest
 
@@ -41,17 +36,25 @@
         append: true
 
     - name: Pull Docker image
-      community.docker.docker_image:
-        name: "{{ docker_image }}"
-        source: pull
+      ansible.builtin.command:
+        cmd: "docker pull {{ docker_image }}"
+      register: pull_out
+      changed_when: "'Status: Downloaded newer image' in pull_out.stdout"
+
+    - name: Stop existing container (if any)
+      ansible.builtin.shell: docker stop rewards && docker rm rewards
+      args:
+        executable: /bin/bash
+      register: stop_out
+      failed_when: false
+      changed_when: stop_out.rc == 0
 
     - name: Run app container
-      community.docker.docker_container:
-        name: rewards
-        image: "{{ docker_image }}"
-        state: started
-        restart_policy: unless-stopped
-        ports:
-          - "{{ app_port }}:{{ app_port }}"
-        env:
-          PORT: "{{ app_port | string }}"
+      ansible.builtin.command:
+        cmd: >-
+          docker run -d
+          --name rewards
+          --restart unless-stopped
+          -p {{ app_port }}:{{ app_port }}
+          -e PORT={{ app_port }}
+          {{ docker_image }}

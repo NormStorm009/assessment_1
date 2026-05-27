@@ -2,7 +2,7 @@
 resource "aws_launch_template" "ansible" {
   name_prefix   = "${local.name}-ansible-lt-"
   image_id      = data.aws_ami.al2023.id
-  instance_type = var.ec2_instance_type
+  instance_type = var.ansible_instance_type
 
   iam_instance_profile {
     arn = aws_iam_instance_profile.ec2.arn
@@ -21,8 +21,8 @@ resource "aws_launch_template" "ansible" {
     docker_image    = var.docker_image
     github_repo_url = var.github_repo_url
     github_branch   = var.github_branch
-    ssm_key_param   = aws_ssm_parameter.ansible_private_key.name
-    aws_region      = var.aws_region
+    ssm_key_param = aws_ssm_parameter.ansible_private_key.name
+    aws_region    = var.aws_region
   }))
 
   metadata_options {

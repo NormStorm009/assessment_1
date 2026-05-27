@@ -73,8 +73,14 @@ variable "docker_image" {
   default     = "nginx:alpine"
 }
 
+variable "ansible_instance_type" {
+  description = "Instance type for the Ansible control node — needs more RAM than the app server"
+  type        = string
+  default     = "t3.medium"
+}
+
 variable "ansible_port" {
-  description = "Port the Ansible Semaphore dashboard listens on inside the container"
+  description = "Port the Ansible Semaphore dashboard listens on"
   type        = number
   default     = 3000
 }

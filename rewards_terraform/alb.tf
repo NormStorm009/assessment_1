@@ -72,13 +72,13 @@ resource "aws_lb_target_group" "ansible" {
   target_type = "instance"
 
   health_check {
-    path                = "/"
+    path                = "/api/ping"
     protocol            = "HTTP"
-    matcher             = "200,302"
-    interval            = 30
-    timeout             = 5
+    matcher             = "200"
+    interval            = 90
+    timeout             = 15
     healthy_threshold   = 2
-    unhealthy_threshold = 3
+    unhealthy_threshold = 10
   }
 
   tags = {
